@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import intelrnn_pytorch as irnn
 from torch.autograd import Variable
 import time
 import sys
@@ -9,12 +10,15 @@ count = 20     # number of iterations
 cuda = False   # whether GPU is used or not
 train = False  # True: test training performance; False: test forward performance only
 daily = False
+ir = False
 if 'cuda' in sys.argv:
     cuda = True
 if 'train' in sys.argv:
     train = True
 if 'daily' in sys.argv:
     daily = True
+if 'irnn' in sys.argv:
+    ir = True    
 
 if daily:
     sizes = [[64,50,500,500],
@@ -49,6 +53,18 @@ else:
         ]
 
 
+#nDryruns = 10
+#input_dry = Variable(torch.randn(30, 64, 500))
+#h0_dry = Variable(torch.randn(1, 64, 500))
+#c0_dry = Variable(torch.randn(1, 64, 500)) 
+
+#for i in range(nDryruns):
+#    if ir:
+#        rnn = irnn.LSTM(500, 500, 1)
+#    else:
+#        rnn = nn.LSTM(500, 500, 1)
+#    rnn(input_dry, (h0_dry, c0_dry))
+
 for idx in range(len(sizes)):
     size = sizes[idx]
     N = size[0]    # batch size
@@ -62,7 +78,10 @@ for idx in range(len(sizes)):
         h0 = Variable(torch.randn(1, N, H).cuda())
         c0 = Variable(torch.randn(1, N, H).cuda())
     else:
-        rnn = nn.LSTM(D,H,1)
+        if ir:
+            rnn = irnn.LSTM(D,H,1)
+        else:
+            rnn = nn.LSTM(D,H,1)
         input = Variable(torch.randn(T, N, D))
         h0 = Variable(torch.randn(1, N, H))
         c0 = Variable(torch.randn(1, N, H))
